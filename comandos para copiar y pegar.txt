@@ -1,0 +1,26 @@
+python main_sinkhorn.py --mode calculate_pt
+
+python main_sinkhorn.py --mode calculate_potentials
+
+python main_sinkhorn.py --mode calculate_potentials_semidiscrete
+
+python main_sinkhorn.py --mode generate --pot_path Potentials/g_500_500_50_discrete.pt
+
+python main_sinkhorn.py --mode generate --pot_path Potentials/g_500_500_50_semidiscrete.pt 
+
+
+Reformulamos el acoplamiento OT latente entre ruido y datos como un problema semidiscreto 
+con fuente continua, evitando la dependencia explícita de muestras fuente finitas.
+
+
+Desarrollamos un pipeline práctico para estimar potenciales duales semidiscretos en espacios
+latentes de VAEs y usarlos para inducir dinámicas generativas tipo Schrödinger bridge.
+
+Mostramos empíricamente que, en el régimen bien muestreado y regularizado, el caso discreto
+aproxima estrechamente al semidiscreto, mientras que este último presenta ventajas claras 
+en estabilidad, escalabilidad y reproducibilidad cuando el tamaño de la fuente crece.
+
+
+La similitud visual y métrica entre ambos métodos en el régimen de muestreo denso sugiere que
+el enfoque discreto actúa como una aproximación consistente del límite semidiscreto, validando
+la formulación continua como objeto subyacente.

@@ -1,0 +1,74 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# Entornos virtuales
+# =========================
+venv/
+venv_VAE/
+.env/
+.venv/
+
+# =========================
+# Jupyter / notebooks
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Logs / debugging
+# =========================
+*.log
+
+# =========================
+# WandB
+# =========================
+wandb/
+
+# =========================
+# Datos (MUY IMPORTANTE)
+# =========================
+Datasets/
+Datasets/CelebA/
+Datasets/noise/
+
+# =========================
+# Outputs del modelo
+# =========================
+Weights/
+checkpoints/
+*.pt
+*.pth
+
+# =========================
+# Resultados / artefactos
+# =========================
+Images/
+Latents/
+Potentials/
+grids_output/
+
+# =========================
+# Archivos grandes sueltos
+# =========================
+
+*.jpg
+*.jpeg
+comandos para copiar y pegar.txt
+
+# (opcional: si quieres subir imágenes de resultados, elimina esta sección)
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# Sistema
+# =========================
+.DS_Store
+Thumbs.db

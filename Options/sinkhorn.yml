@@ -1,0 +1,27 @@
+device: 1
+#mode: 'calculate_pt' 
+#mode: 'calculate_potentials'
+mode: 'generate' 
+#Calculate_pt
+batch_size: 1
+image_dir_celeba: Datasets/img_align_celeba/all
+image_dir_noise: Datasets/noise
+image_dir_noise_test: Datasets/ruido test
+ckpt: Weights/VAE_sinkhorn.pt
+n_source_pt: 500
+n_target_pt: 500
+
+#Calculate_potentials
+n_source_potentials: 500
+n_target_potentials: 500
+eps: 40
+iters_max: 40000
+
+#generate
+n_generated: 20
+n_source_generate: 500
+n_target_generate: 500
+eps_generate: 50
+tau: 0.95
+Nsteps: 600
+ckpt_generate: Weights/VAE_sinkhorn.pt

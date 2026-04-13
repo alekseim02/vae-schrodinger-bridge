@@ -1,0 +1,47 @@
+root_path: vae-schrodinger-bridge/  
+
+#### training devices
+device:
+  cuda: True
+  gpus: 0, 1
+  ids: [0, 1] 
+
+#### datasets      ###nOT IMPLEMENTED YET
+datasets:
+  name: CelebAi           #Options: LOLv1 | LOLV2 | GoPRO
+  input_size: [3, 128, 128]
+  n_workers: 4  # per GPU
+  entrenamiento:
+    entrenamiento_path: Datasets/CelebAi
+    batch_size_entrenamiento: 32
+    transform: CelebAi
+
+#### network structures
+network:
+  name: VAE
+  save_weights: VAE3_best_256
+
+#### training settings: learning rate scheme, loss
+train:
+  optimizer: Adam             #Options: adam | adagrad | adadelta | sgd
+  lr_encoder: !!float 1e-4
+  lr_decoder: !!float 1e-4
+  lr_scheduler: None  #Options: CosineAnnealing | ResduceLROnPlateau 
+  epochs: 200
+  weight_decay: !!float 1e-4
+  eta_min: !!float 1e-7
+  loss: VAELoss
+  checkpoint: #/VAE/Weights/VAE3_last_256.pt
+  verbose: 1000
+
+#### wandb:
+wandb:
+  init: True  #If you want to log the results to wandb 
+  project: 
+  entity: 
+  name: 
+  save_code: 
+  resume: never # resume: must, if uploading to an existing project
+  id: # must be empty if don't want to overwrite an existing project
+
+
