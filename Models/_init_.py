@@ -11,39 +11,32 @@ from Models.VAE import VAE
 def load_model_weights(model, checkpoint_path, device, strict=True):
     checkpoint = torch.load(checkpoint_path, map_location=device)
 
-    # Extraer el state_dict
     state_dict = checkpoint['model_state_dict'] if 'model_state_dict' in checkpoint else checkpoint
 
-    # Determinar si hay que usar .module
     is_wrapped = isinstance(model, torch.nn.parallel.DistributedDataParallel)
 
-    # Si los nombres de los pesos tienen 'module.' pero el modelo no está envuelto
     if not is_wrapped and any(k.startswith('module.') for k in state_dict.keys()):
         print("Quitando prefijo 'module.' de los pesos...")
         state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
 
-    # Si el modelo está envuelto en DDP pero los pesos no lo están
     elif is_wrapped and not any(k.startswith('module.') for k in state_dict.keys()):
         print("Agregando prefijo 'module.' a los pesos...")
         state_dict = {f'module.{k}': v for k, v in state_dict.items()}
 
-    # Cargar los pesos
     model.load_state_dict(state_dict, strict=strict)
     print(f"Pesos cargados desde {checkpoint_path}")
 
 def create_model(opt, rank, world_size):
-    torch.cuda.set_device(rank)  # Asignar la GPU correspondiente
+    torch.cuda.set_device(rank)  
     device = torch.device(f'cuda:{rank}' if torch.cuda.is_available() else 'cpu')
 
     model_name = opt['network']['name'] 
 
-    # Seleccionar el modelo basado en el nombre
     if model_name == 'VAE':
         model = VAE()
     else:
         raise NotImplementedError(f'La red {model_name} no está implementada')
 
-    # Estimación de la complejidad y el número de operaciones
     if rank == 0:
         print(f'Usando la red {model_name}')
         input_size = tuple(opt['datasets']['input_size'])
@@ -69,9 +62,8 @@ def create_optimizer_scheduler(opt, model, loader, rank, world_size):
     optname = opt['train']['optimizer']
     scheduler = opt['train']['lr_scheduler']
 
-    # Crear el optimizador
     if optname == 'Adam':
-        # En DDP el módulo real es model.module, si no usas DDP quita .module
+
         encoder_params = model.module.encoder.parameters() if hasattr(model, 'module') else model.encoder.parameters()
         decoder_params = model.module.decoder.parameters() if hasattr(model, 'module') else model.decoder.parameters()
 
@@ -91,7 +83,6 @@ def create_optimizer_scheduler(opt, model, loader, rank, world_size):
         optimizer = Adam(model.parameters(), lr=opt['train']['lr_initial'], weight_decay=opt['train']['weight_decay'])
         print(f"Advertencia: Optimizer {optname} no reconocido. Usando Adam por defecto.")
 
-    # Crear el scheduler
     if scheduler == 'CosineAnnealing':
         scheduler = CosineAnnealingLR(optimizer, T_max=opt['train']['epochs'], eta_min=opt['train']['eta_min'])
     elif scheduler == 'ReduceLROnPlateau':
@@ -103,7 +94,7 @@ def create_optimizer_scheduler(opt, model, loader, rank, world_size):
 
 def save_weights(model, optimizer, scheduler=None, filename="model_weights.pth", rank=0):
     if rank != 0:
-        return  # Solo el proceso con rank 0 guarda los pesos
+        return  
 
     if not filename.endswith(".pt"):
         filename += ".pt"

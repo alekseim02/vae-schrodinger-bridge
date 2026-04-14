@@ -1,7 +1,6 @@
 import argparse
 import os
 import time
-# import warnings  # CORREGIDO: eliminado (no usado)
 
 import torch
 from torchvision.utils import save_image
@@ -13,7 +12,6 @@ from Utils.utils_sinkhorn import (
     generate,
     sample_noise,
 )
-# from Models.Encoder import Encoder  # CORREGIDO: ya no se usa
 from Models.Decoder import Decoder
 
 
@@ -30,8 +28,7 @@ def Sinkhorn(cfg, device):
             data='celeba'
         )
 
-    elif cfg['mode'] == 'calculate_potentials':  # CORREGIDO: elif
-
+    elif cfg['mode'] == 'calculate_potentials':  
         calculate_potentials(
             eps=cfg['eps'],
             n_source=cfg['n_source_potentials'],
@@ -40,17 +37,17 @@ def Sinkhorn(cfg, device):
             iters_max=cfg['iters_max']
         )
 
-    elif cfg['mode'] == 'generate':  # CORREGIDO: elif
+    elif cfg['mode'] == 'generate':  
 
         n_generated = cfg['n_generated']
-        n_source = cfg['n_source_generate']  # (se mantiene por compatibilidad, aunque no se usa directamente)
+        n_source = cfg['n_source_generate']  
         n_target = cfg['n_target_generate']
         eps = cfg['eps_generate']
         tau = cfg['tau']
         Nsteps = cfg['Nsteps']
         checkpoint = cfg['ckpt_generate']
 
-        # --- Load checkpoint ---
+
         try:
             checkpoint_data = torch.load(checkpoint, map_location=device)
         except FileNotFoundError:
@@ -63,10 +60,10 @@ def Sinkhorn(cfg, device):
         except KeyError:
             raise RuntimeError("[ERROR] El checkpoint no contiene 'model_state_dict'")
 
-        # --- Load decoder ---
+  
         decoder = Decoder().to(device)
         decoder_state_dict = {
-            k.replace("module.", "").replace("decoder.", ""): v  # CORREGIDO
+            k.replace("module.", "").replace("decoder.", ""): v  
             for k, v in full_state_dict.items()
             if "decoder." in k
         }
@@ -78,20 +75,20 @@ def Sinkhorn(cfg, device):
 
         decoder.eval()
 
-        # --- Load target latents ---
+  
         file_path_caras = f'./Latents/latents_{n_target}_celeba.pt'
 
         if not os.path.exists(file_path_caras):
-            raise RuntimeError(f"[ERROR] No existe el archivo de latentes: {file_path_caras}")  # CORREGIDO
+            raise RuntimeError(f"[ERROR] No existe el archivo de latentes: {file_path_caras}")  
 
-        data_caras = torch.load(file_path_caras, map_location='cpu')  # CORREGIDO
+        data_caras = torch.load(file_path_caras, map_location='cpu') 
         matrix_caras = torch.cat(data_caras, dim=0).to(device)
 
-        # --- Load potentials ---
+
         if 'pot_path' in cfg and cfg['pot_path'] is not None:
             file_path_pot = cfg['pot_path']
         else:
-            file_path_pot = f"./Potentials/logv_{n_source}_{n_target}_{eps}.pt"  # CORREGIDO (nombre consistente)
+            file_path_pot = f"./Potentials/logv_{n_source}_{n_target}_{eps}.pt"  
 
         try:
             pot = torch.load(file_path_pot, map_location=device)
@@ -100,22 +97,22 @@ def Sinkhorn(cfg, device):
 
         assert isinstance(pot, dict), "Potential file must be a dict"
         assert pot["type"] == "discrete", "Only discrete potentials supported"
-        assert "logv" in pot, "Potential file must contain key 'logv'"  # CORREGIDO
+        assert "logv" in pot, "Potential file must contain key 'logv'"  
         assert "eps" in pot, "Potential file must contain key 'eps'"
 
         logv = pot["logv"].to(device)
         eps_pot = float(pot["eps"])
 
-        # CORREGIDO: validar coherencia de eps
+
         if abs(eps - eps_pot) > 1e-8:
             raise RuntimeError(f"[ERROR] eps mismatch: cfg={eps} vs pot={eps_pot}")
 
         pot_name = os.path.splitext(os.path.basename(file_path_pot))[0]
-        save_folder = f'Images/{pot_name}_tau{tau}_Ns{Nsteps}_N{n_generated}/'  # CORREGIDO (no duplicar eps)
+        save_folder = f'Images/{pot_name}_tau{tau}_Ns{Nsteps}_N{n_generated}/'  
 
         os.makedirs(save_folder, exist_ok=True)
 
-        # --- Generate images ---
+   
         total_time = 0.0
 
         for i in range(n_generated):
@@ -123,7 +120,7 @@ def Sinkhorn(cfg, device):
 
             start = time.perf_counter()
 
-            with torch.inference_mode():  # CORREGIDO
+            with torch.inference_mode():  
                 final_image = generate(
                     noise,
                     decoder,
@@ -139,7 +136,7 @@ def Sinkhorn(cfg, device):
             total_time += (end - start)
 
             filename = os.path.join(save_folder, f"{i:06d}.png")
-            save_image(final_image, filename)  # opcional: normalize=True
+            save_image(final_image, filename) 
 
             del final_image
 
@@ -206,7 +203,7 @@ if __name__ == "__main__":
     yaml_cfg = parse(args.config)
     cfg = yaml_cfg.copy()
 
-    gpu_id = cfg.get('device', 0)  # CORREGIDO
+    gpu_id = cfg.get('device', 0) 
     device = torch.device(f'cuda:{gpu_id}' if torch.cuda.is_available() else "cpu")
 
     if args.pot_path is not None:

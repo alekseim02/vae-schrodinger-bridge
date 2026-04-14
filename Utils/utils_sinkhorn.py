@@ -4,11 +4,11 @@ import ot
 from torch.utils.data import Subset, DataLoader
 from Models.Encoder import Encoder
 from Models.Decoder import Decoder
-from Utils.data import ImageDataset, CelebAi
+from Utils.data import ImageDataset, CelebATransform
 
 
 def calculate_pt(batch_size, image_dir, checkpoint, device, n_samples, data='celeba'):
-    dataset = ImageDataset(image_dir, transform=CelebAi(image_size=128))
+    dataset = ImageDataset(image_dir, transform=CelebATransform(image_size=128))
 
     indices = list(range(n_samples))
     subset = Subset(dataset, indices)
