@@ -178,7 +178,7 @@ python main.py --mode generate --manual
 This work builds upon the Schrödinger Bridge estimation framework proposed in:
 
 > Pooladian, A. et al. **"Plug-in estimation of Schrödinger bridges"** (2024).
-> Code available at https://github.com/AramPooladian — used under MIT License.
+> Code available at https://github.com/APooladian/SinkhornBridges — used under MIT License.
 
 This work also uses a VAE architecture inspired by:
 
