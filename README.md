@@ -16,7 +16,7 @@
 
 This repository contains the official implementation of **"Latent Schrödinger Bridge: Optimal Transport for Image Generation via VAE"**.
 
-We propose a generative framework that combines **Variational Autoencoders (VAE)** with **Schrödinger Bridge optimal transport** to generate high-quality face images. Rather than operating in pixel space, we perform optimal transport entirely in the **latent space** of a VAE (following the architecture of Rombach et al., 2022) — making the transport problem tractable and the generation fast.
+We propose a generative framework that combines **Variational Autoencoders (VAE)** with **Schrödinger Bridge optimal transport** to generate high-quality face images. Rather than operating in pixel space, we perform optimal transport entirely in the **latent space** of a VAE (following the architecture of Rombach et al., 2022) — making the transport problem tractable and the generation fast. The training of the VAE is therefore assumed, as the repository’s primary focus is on the methodology of using Schrödinger Bridges and optimal transport. However, for the sake of completeness, code is included to train the VAE from scratch.
 
 The key idea is to learn a discrete Sinkhorn potential $g^*$ (obtained from dual variables of the entropic OT problem) that maps a Gaussian noise distribution to the latent distribution of real images (CelebA), then use a **stochastic gradient flow** to transport noise samples to realistic latent codes, which are finally decoded into images.
 
@@ -119,7 +119,7 @@ All parameters are controlled via `Options/sinkhorn.yml`. The pipeline has three
 ### Step 1 — Extract latent codes (offline)
 
 ```bash
-python main.py --mode calculate_pt
+python main_sinkhorn.py --mode calculate_pt
 ```
 
 This produces `Latents/latents_{n_samples}_celeba.pt`.
@@ -129,7 +129,7 @@ This produces `Latents/latents_{n_samples}_celeba.pt`.
 ### Step 2 — Compute the Sinkhorn potential (offline)
 
 ```bash
-python main.py --mode calculate_potentials
+python main_sinkhorn.py --mode calculate_potentials
 ```
 
 This produces:
@@ -143,7 +143,7 @@ Potentials/logv_{n_source}_{n_target}_{eps}_discrete.pt
 ### Step 3 — Generate images (online)
 
 ```bash
-python main.py --mode generate --pot_path Potentials/logv_XXXX_XXXX_X.X_discrete.pt
+python main_sinkhorn.py --mode generate --pot_path Potentials/logv_XXXX_XXXX_X.X_discrete.pt
 ```
 
 Generated images are saved in `Images/`.
