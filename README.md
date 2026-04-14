@@ -135,7 +135,7 @@ python main_sinkhorn.py --mode calculate_potentials
 This produces:
 
 ```text
-Potentials/logv_{n_source}_{n_target}_{eps}_discrete.pt
+Potentials/logv_{n_source}_{n_target}_{eps}.pt
 ```
 
 ---
