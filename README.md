@@ -6,7 +6,7 @@
   <img src="assets/Imagen_VAE_SB-2_page-0001.jpg" alt="Pipeline diagram" width="90%"/>
   <br>
   <em>
-  Figure 1: Overview of the proposed pipeline. Offline phase (left): latent representations of CelebA images are extracted via the VAE encoder and the discrete Sinkhorn optimal transport potential $g^*$ is computed. Online phase (right): a noise sample is transported to the target distribution via gradient flow guided by $g^*$, then decoded into a face image.
+  Figure 1: Overview of the proposed pipeline. Offline phase (left): latent representations of CelebA images are extracted via the VAE encoder and the discrete Sinkhorn optimal transport potential $g^*$ is computed. Online phase (right): a noise sample is transported to the target distribution via stochastic gradient flow guided by $g^*$, then decoded into a face image.
   </em>
 </p>
 
@@ -16,9 +16,9 @@
 
 This repository contains the official implementation of **"Latent Schrödinger Bridge: Optimal Transport for Image Generation via VAE"**.
 
-We propose a generative framework that combines **Variational Autoencoders (VAE)** with **Schrödinger Bridge optimal transport** to generate high-quality face images. Rather than operating in pixel space, we perform optimal transport entirely in the **latent space** of a VAE (following the architecture of Rombach et al., 2022), making the transport problem tractable and the generation fast.
+We propose a generative framework that combines **Variational Autoencoders (VAE)** with **Schrödinger Bridge optimal transport** to generate high-quality face images. Rather than operating in pixel space, we perform optimal transport entirely in the **latent space** of a VAE (following the architecture of Rombach et al., 2022) — making the transport problem tractable and the generation fast.
 
-The key idea is to learn a discrete Sinkhorn potential $g^*$ that maps a Gaussian noise distribution to the latent distribution of real images (CelebA), then use a **gradient flow** to transport noise samples to realistic latent codes, which are finally decoded into images.
+The key idea is to learn a discrete Sinkhorn potential $g^*$ (obtained from dual variables of the entropic OT problem) that maps a Gaussian noise distribution to the latent distribution of real images (CelebA), then use a **stochastic gradient flow** to transport noise samples to realistic latent codes, which are finally decoded into images.
 
 > **Keywords**: VAE, Schrödinger Bridge, Sinkhorn, optimal transport, latent diffusion, generative model, image generation, CelebA.
 
@@ -36,29 +36,29 @@ The method is divided into an **offline pre-processing phase** and a **fast onli
 
 2. **Define source distribution**: draw noise samples $z \sim \mathcal{N}(0, I)$ as the source distribution $\nu$.
 
-3. **Solve the Schrödinger Bridge**: run discrete Sinkhorn iterations between $\nu$ and $\mu$ to compute the entropic optimal transport potential $g^*$, defined as:
+3. **Solve the Schrödinger Bridge**: run discrete Sinkhorn iterations between $\nu$ and $\mu$ to compute a discrete dual potential $g^*$ stored as:
 
 $$
-g^* = \arg\min W_\varepsilon(\nu, \mu)
+g^* \approx \varepsilon \log v
 $$
 
-where $W_\varepsilon$ is the entropic Wasserstein distance with regularization $\varepsilon$. This step is done **once** and $g^*$ is stored on disk.
+where $v$ are the Sinkhorn scaling factors and $\varepsilon$ is the entropic regularization parameter. This step is done **once** and the potential is stored on disk.
 
 ---
 
-#### Online — Gradient flow inference
+#### Online — Stochastic gradient flow inference
 
 Given a stored potential $g^*$, generating a new image requires:
 
 1. Sample $z_0 \sim \mathcal{N}(0, I)$.
 
-2. Run $N_{\text{steps}}$ iterations of gradient flow in latent space:
+2. Run $N_{\text{steps}}$ iterations of stochastic gradient flow in latent space:
 
 $$
-z_{t+1} = z_t - \tau \cdot \nabla_z F_\varepsilon(z_t)
+z_{t+1} = z_t + \tau \cdot \text{drift}(z_t) + \sqrt{\tau \varepsilon},\xi_t
 $$
 
-where $F_\varepsilon$ is the free energy functional guided by $g^*$ and $\tau$ is the step size.
+where $\xi_t \sim \mathcal{N}(0, I)$ and the drift term is computed via a barycentric projection induced by the discrete potential $g^*$.
 
 3. Decode the transported latent $z^*$ through the VAE decoder to obtain the generated image $\hat{x}$.
 
@@ -84,14 +84,14 @@ vae-schrodinger-bridge/
 │   └── Decoder.py              # VAE decoder architecture
 │
 ├── Utils/
-│   ├── utils_sinkhorn.py       # Core: Sinkhorn iterations, gradient flow, generation
+│   ├── utils_sinkhorn.py       # Core: Sinkhorn, drift, sampling
 │   └── data.py                 # CelebA dataset and transforms
 │
 ├── Options/
 │   └── sinkhorn.yml            # All hyperparameters and paths
 │
 ├── Latents/                    # Stored latent vectors {y_i} (generated offline)
-├── Potentials/                 # Stored Sinkhorn potentials g*
+├── Potentials/                 # Stored Sinkhorn dual potentials (logv)
 ├── Images/                     # Output generated images
 │
 ├── main.py                     # Main entry point
@@ -132,14 +132,18 @@ This produces `Latents/latents_{n_samples}_celeba.pt`.
 python main.py --mode calculate_potentials
 ```
 
-This produces `Potentials/g_{n_source}_{n_target}_{eps}_discrete.pt`.
+This produces:
+
+```text
+Potentials/logv_{n_source}_{n_target}_{eps}_discrete.pt
+```
 
 ---
 
 ### Step 3 — Generate images (online)
 
 ```bash
-python main.py --mode generate --pot_path Potentials/g_XXXX_XXXX_X.X_discrete.pt
+python main.py --mode generate --pot_path Potentials/logv_XXXX_XXXX_X.X_discrete.pt
 ```
 
 Generated images are saved in `Images/`.
@@ -156,16 +160,16 @@ python main.py --mode generate --manual
 
 ## Configuration
 
-| Parameter             | Description                                            |
-| --------------------- | ------------------------------------------------------ |
-| `eps`                 | Entropic regularization for Sinkhorn ($W_\varepsilon$) |
-| `n_target_pt`         | Number of CelebA latents to encode                     |
-| `n_source_potentials` | Source samples for potential computation               |
-| `n_target_potentials` | Target samples for potential computation               |
-| `iters_max`           | Maximum Sinkhorn iterations                            |
-| `tau`                 | Step size for gradient flow                            |
-| `Nsteps`              | Number of gradient flow steps                          |
-| `n_generated`         | Number of images to generate                           |
+| Parameter             | Description                              |
+| --------------------- | ---------------------------------------- |
+| `eps`                 | Entropic regularization for Sinkhorn     |
+| `n_target_pt`         | Number of CelebA latents to encode       |
+| `n_source_potentials` | Source samples for potential computation |
+| `n_target_potentials` | Target samples for potential computation |
+| `iters_max`           | Maximum Sinkhorn iterations              |
+| `tau`                 | Step size for stochastic flow            |
+| `Nsteps`              | Number of flow steps                     |
+| `n_generated`         | Number of images to generate             |
 
 ---
 
