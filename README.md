@@ -6,7 +6,7 @@
   <img src="assets/Imagen_VAE_SB-2_page-0001.jpg" alt="Pipeline diagram" width="90%"/>
   <br>
   <em>
-  Figure 1: Overview of the proposed pipeline. Offline phase (left): latent representations of CelebA images are extracted via the VAE encoder and the discrete Sinkhorn optimal transport potential $g^*$ is computed. Online phase (right): a noise sample is transported to the target distribution via stochastic gradient flow guided by $g^*$, then decoded into a face image.
+  Figure 1: Overview of the proposed pipeline. Offline phase (left): latent representations of CelebA images are extracted via the VAE encoder and the discrete Sinkhorn optimal transport potential g* is computed. Online phase (right): a noise sample is transported to the target distribution via stochastic gradient flow guided by g*, then decoded into a face image.
   </em>
 </p>
 
