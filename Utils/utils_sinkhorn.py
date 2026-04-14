@@ -43,8 +43,8 @@ def calculate_pt(batch_size, image_dir, checkpoint, device, n_samples, data='cel
 
 def sinkhorn_potentials(source, target, eps, n_source, n_target, device, iters_max):
     """
-    Calcular los potenciales duales para el problema de transporte óptimo
-    con distribuciones de diferentes tamaños.
+    Compute the dual potentials for the optimal transport problem
+    with distributions of different sizes.
     """
  
     a = torch.ones((n_source,), device=device) / n_source
@@ -125,7 +125,6 @@ class ent_drift:
 
         M = torch.cdist(x, self.data) ** 2 / (2.0 * t)
 
-        # K = -M/eps + potential
         K = -M / self.eps + self.potential[None, :]  
 
         gammaz = -torch.max(K, dim=1).values  
@@ -145,7 +144,7 @@ class ent_drift:
 
 def sample(latent_noise, matrix_caras, logv_opt, device, eps, tau, Nsteps):
     """
-    Muestreo mediante el estimador de drift y Langevin discretizado.
+    Sampling using the drift estimator and discrete Langevin method.
     """
     dt = tau / Nsteps
     sigma = torch.sqrt(torch.tensor(dt * eps, device=device)) 

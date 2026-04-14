@@ -4,7 +4,7 @@ import torch
 import torch.distributed as dist
 
 def setup_distributed(rank, world_size):
-    """Inicializa el entorno distribuido si hay múltiples GPUs."""
+    """Initialize the distributed environment if there are multiple GPUs."""
     
     os.environ['MASTER_ADDR'] = 'localhost'  
     os.environ['MASTER_PORT'] = '29500'     
@@ -16,7 +16,7 @@ def setup_distributed(rank, world_size):
         world_size=world_size,  
         rank=rank  
     )
-    print(f"Proceso {rank} de {world_size} está usando la GPU {rank}")
+    print(f"Process {rank} of {world_size} is using GPU {rank}")
 
 def cleanup():
     dist.destroy_process_group()

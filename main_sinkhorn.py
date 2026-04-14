@@ -51,14 +51,14 @@ def Sinkhorn(cfg, device):
         try:
             checkpoint_data = torch.load(checkpoint, map_location=device)
         except FileNotFoundError:
-            raise RuntimeError(f"[ERROR] Checkpoint no encontrado: {checkpoint}")
+            raise RuntimeError(f"[ERROR] Checkpoint not found: {checkpoint}")
         except Exception as e:
-            raise RuntimeError(f"[ERROR] Fallo al cargar checkpoint: {e}")
+            raise RuntimeError(f"[ERROR] Error loading checkpoint: {e}")
 
         try:
             full_state_dict = checkpoint_data['model_state_dict']
         except KeyError:
-            raise RuntimeError("[ERROR] El checkpoint no contiene 'model_state_dict'")
+            raise RuntimeError("[ERROR] The checkpoint does not contain 'model_state_dict'")
 
   
         decoder = Decoder().to(device)
@@ -71,7 +71,7 @@ def Sinkhorn(cfg, device):
         try:
             decoder.load_state_dict(decoder_state_dict, strict=True)
         except RuntimeError as e:
-            raise RuntimeError(f"[ERROR] Error cargando Decoder: {e}")
+            raise RuntimeError(f"[ERROR] Error loading Decoder: {e}")
 
         decoder.eval()
 
@@ -79,7 +79,7 @@ def Sinkhorn(cfg, device):
         file_path_caras = f'./Latents/latents_{n_target}_celeba.pt'
 
         if not os.path.exists(file_path_caras):
-            raise RuntimeError(f"[ERROR] No existe el archivo de latentes: {file_path_caras}")  
+            raise RuntimeError(f"[ERROR] The latent file does not exist: {file_path_caras}")  
 
         data_caras = torch.load(file_path_caras, map_location='cpu') 
         matrix_caras = torch.cat(data_caras, dim=0).to(device)
@@ -93,7 +93,7 @@ def Sinkhorn(cfg, device):
         try:
             pot = torch.load(file_path_pot, map_location=device)
         except Exception as e:
-            raise RuntimeError(f"[ERROR] No se pudo cargar potencial: {file_path_pot} | {e}")
+            raise RuntimeError(f"[ERROR] Could not load potential: {file_path_pot} | {e}")
 
         assert isinstance(pot, dict), "Potential file must be a dict"
         assert pot["type"] == "discrete", "Only discrete potentials supported"
@@ -142,13 +142,13 @@ def Sinkhorn(cfg, device):
 
         avg_time = total_time / n_generated if n_generated > 0 else 0
 
-        print(f"Tiempo promedio de inferencia por imagen: {avg_time:.4f} segundos")
-        print(f"Imagenes generadas en: {save_folder}")
+        print(f"Average inference time per image: {avg_time:.4f} seconds")
+        print(f"Images generated in: {save_folder}")
 
 
 def prompt_param(param, default):
-    print(f"\n[INPUT] Parámetro: {param}")
-    val = input(f"Introduce valor (deja vacío para usar el valor por defecto [{default}]): ")
+    print(f"\n[INPUT] Parameter: {param}")
+    val = input(f"Enter a value (leave blank to use the default value [{default}]): ")
     if val == "":
         return default
     try:
@@ -185,7 +185,7 @@ def force_types(cfg, mode):
             try:
                 cfg[key] = typ(cfg[key])
             except Exception:
-                raise RuntimeError(f"[ERROR] No se pudo convertir {key} a {typ}")  # CORREGIDO
+                raise RuntimeError(f"[ERROR] Could not convert {key} to {typ}")
 
     return cfg
 

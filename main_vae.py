@@ -22,7 +22,6 @@ def run_training(rank, world_size, opt):
     print('setup done')
 
     LOADER_ENTRENAMIENTO, samplers = dataloader(opt, rank, world_size)
-    print('Loaders cargados')
 
     model, flops, params = create_model(opt, rank, world_size)
 
@@ -30,11 +29,11 @@ def run_training(rank, world_size, opt):
 
     optimizer, scheduler = create_optimizer_scheduler(opt, model, LOADER_ENTRENAMIENTO, rank, world_size)
 
-    print('Optimizer y scheduler creados')
+    print('Optimizer y scheduler created')
 
     perdida_entrenamiento = entrenamiento(opt, model, VAELoss, optimizer, scheduler, LOADER_ENTRENAMIENTO, samplers, rank, world_size)
     
-    print('Entrenamiento completado')
+    print('Training completed')
 
 def main():
     world_size = torch.cuda.device_count()

@@ -16,15 +16,15 @@ def load_model_weights(model, checkpoint_path, device, strict=True):
     is_wrapped = isinstance(model, torch.nn.parallel.DistributedDataParallel)
 
     if not is_wrapped and any(k.startswith('module.') for k in state_dict.keys()):
-        print("Quitando prefijo 'module.' de los pesos...")
+        print("Removing the ‘module.’ prefix from the weights...")
         state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
 
     elif is_wrapped and not any(k.startswith('module.') for k in state_dict.keys()):
-        print("Agregando prefijo 'module.' a los pesos...")
+        print("Adding the prefix ‘module.’ to the weights...")
         state_dict = {f'module.{k}': v for k, v in state_dict.items()}
 
     model.load_state_dict(state_dict, strict=strict)
-    print(f"Pesos cargados desde {checkpoint_path}")
+    print(f"Weights loaded from {checkpoint_path}")
 
 def create_model(opt, rank, world_size):
     torch.cuda.set_device(rank)  
@@ -35,14 +35,14 @@ def create_model(opt, rank, world_size):
     if model_name == 'VAE':
         model = VAE()
     else:
-        raise NotImplementedError(f'La red {model_name} no está implementada')
+        raise NotImplementedError(f'The {model_name} network is not implemented')
 
     if rank == 0:
-        print(f'Usando la red {model_name}')
+        print(f'Using {model_name}')
         input_size = tuple(opt['datasets']['input_size'])
         flops, params = ptflops.get_model_complexity_info(model, input_size, print_per_layer_stat=False)
-        print(f'Complejidad computacional con entrada de tamaño {input_size}: {flops}')
-        print('Número de parámetros: ', params)    
+        print(f'Computational complexity as a function of input size {input_size}: {flops}')
+        print('Number of parameters: ', params)    
     else:
         flops, params = None, None
 
@@ -81,7 +81,7 @@ def create_optimizer_scheduler(opt, model, loader, rank, world_size):
         optimizer = Adagrad(model.parameters(), lr=opt['train']['lr_initial'], weight_decay=opt['train']['weight_decay'])
     else:
         optimizer = Adam(model.parameters(), lr=opt['train']['lr_initial'], weight_decay=opt['train']['weight_decay'])
-        print(f"Advertencia: Optimizer {optname} no reconocido. Usando Adam por defecto.")
+        print(f"Warning: Unrecognized optimizer {optname}. Using Adam by default.")
 
     if scheduler == 'CosineAnnealing':
         scheduler = CosineAnnealingLR(optimizer, T_max=opt['train']['epochs'], eta_min=opt['train']['eta_min'])
@@ -114,7 +114,7 @@ def save_weights(model, optimizer, scheduler=None, filename="model_weights.pth",
         checkpoint['scheduler_state_dict'] = scheduler.state_dict()
 
     torch.save(checkpoint, full_path)
-    print(f"Pesos guardados exitosamente en {full_path}")
+    print(f"Weights successfully saved to {full_path}")
 
 
 __all__ = ['create_model', 'create_optimizer_scheduler', 'save_weights']
