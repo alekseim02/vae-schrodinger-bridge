@@ -58,8 +58,9 @@ grids_output/
 
 *.jpg
 *.jpeg
-comandos para copiar y pegar.txt
-
+*.txt
+!requirements.txt
+!assets/Imagen_VAE_SB-2_page-0001.jpg
 # (opcional: si quieres subir imágenes de resultados, elimina esta sección)
 
 # =========================
