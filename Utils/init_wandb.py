@@ -2,9 +2,6 @@
 import wandb
 
 def init_wandb(opt):
-
-    #os.environ['http_proxy'] = 'http_proxy=http://proxy.cidaut.es:3128'
-    #os.environ['https_proxy'] = 'http_proxy=http://proxy.cidaut.es:3128'
     
     if opt['wandb']['init']:
         wandb.login()
