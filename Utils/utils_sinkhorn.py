@@ -9,17 +9,19 @@ from Utils.data import ImageDataset, CelebATransform
 
 def calculate_pt(batch_size, image_dir, checkpoint, device, n_samples, data='celeba'):
     dataset = ImageDataset(image_dir, transform=CelebATransform(image_size=128))
-
+    print("Dataset size:", len(dataset))
+    print("Requested samples:", n_samples)
     indices = list(range(n_samples))
     subset = Subset(dataset, indices)
 
-    model = Encoder().to(device)
     checkpoint = torch.load(checkpoint, map_location=device)
 
     model_state_dict = checkpoint['model_state_dict']
 
+    model = Encoder().to(device)
+
     encoder_state_dict = {
-        k.replace("module.", "").replace("encoder.", ""): v  
+        k.replace("module.", ""): v
         for k, v in model_state_dict.items()
         if "encoder." in k
     }
@@ -88,15 +90,11 @@ def sinkhorn_potentials(source, target, eps, n_source, n_target, device, iters_m
 
 def calculate_potentials(eps, n_source, n_target, device, iters_max):
     file_path_caras = f'./Latents/latents_{n_target}_celeba.pt'
-    file_path_noise = f'./Latents/latents_{n_source}_noise.pt'
-
+    
     data_caras = torch.load(file_path_caras, map_location='cpu')  
-    data_noise = torch.load(file_path_noise, map_location='cpu')  
 
     matrix_caras = torch.cat(data_caras, dim=0)
-    matrix_noise = torch.cat(data_noise, dim=0)
-
-    matrix_noise = matrix_noise.to(device)
+    matrix_noise = sample_noise(n_source, matrix_caras.shape[1], device, seed=0)
     matrix_caras = matrix_caras.to(device)
 
     
@@ -165,3 +163,10 @@ def sample(latent_noise, matrix_caras, logv_opt, device, eps, tau, Nsteps):
 def generate(noise, decoder, matrix_caras, logv_opt, eps, tau, Nsteps, device):
     latent = sample(noise, matrix_caras, logv_opt, device, eps, tau, Nsteps)
     return decoder(latent)
+
+def sample_noise(n, d, device, seed=None):
+    gen = None
+    if seed is not None:
+        gen = torch.Generator(device=device)
+        gen.manual_seed(int(seed))
+    return torch.randn(n, d, device=device, generator=gen)

@@ -10,7 +10,7 @@ from Utils.utils_sinkhorn import (
     calculate_pt,
     calculate_potentials,
     generate,
-    sample_noise,
+    sample_noise
 )
 from Models.Decoder import Decoder
 
@@ -63,7 +63,7 @@ def Sinkhorn(cfg, device):
   
         decoder = Decoder().to(device)
         decoder_state_dict = {
-            k.replace("module.", "").replace("decoder.", ""): v  
+            k.replace("module.", ""): v  
             for k, v in full_state_dict.items()
             if "decoder." in k
         }
